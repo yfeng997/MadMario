@@ -48,7 +48,7 @@ for e in range(episodes):
     while True:
 
         # Show env
-        # env.render()
+        env.render()
 
         # Run agent
         action = agent.act(state=state)

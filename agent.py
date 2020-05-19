@@ -1,5 +1,6 @@
 from collections import deque
 import torch
+import torch.nn as nn
 import numpy as np
 import random
 from neural import ConvNet
@@ -65,7 +66,7 @@ class DQNAgent:
         else:
             # policy action
             q = self.predict(np.expand_dims(state, 0), model='online')
-            action = np.argmax(q)
+            action = torch.max(q, axis=1)[1].item()
         # decrease eps
         self.eps *= self.eps_decay
         self.eps = max(self.eps_min, self.eps)
@@ -102,12 +103,13 @@ class DQNAgent:
         # calculate discounted future reward
         if self.double_q:
             q = self.predict(next_state, 'online')
-            a = np.argmax(q, axis=1)
-            target_q = reward + (1. - done) * self.gamma * next_q[np.arange(0, self.batch_size), a]
+            q_idx = torch.max(q, axis=1)[1]
+            target_q = torch.tensor(reward) + torch.tensor(1. - done) * self.gamma * next_q[np.arange(0, self.batch_size), q_idx]
         else:
-            target_q = reward + (1. - done) * self.gamma * np.amax(next_q, axis=1)
+            target_q = torch.tensor(reward) + torch.tensor(1. - done) * self.gamma * torch.max(next_q, axis=1)[0]
         # get predicted q values from online_q and actions taken
-        pred_q = np.take_along_axis(self.predict(state, 'online'), action)
+        curr_q = self.predict(state, 'online')
+        pred_q = curr_q[np.arange(0, self.batch_size), action]
         # huber loss
         loss = nn.functional.mse_loss(pred_q, target_q)
         # update online_q
@@ -116,8 +118,7 @@ class DQNAgent:
         self.optimizer.step()
         # reset learn step
         self.learn_step = 0
-
-        return pred_q, loss
+        # TODO Log shit
 
 
     def save_model(self):
