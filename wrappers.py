@@ -1,6 +1,9 @@
 import gym
 import numpy as np
-from gym.wrappers import FrameStack, GrayScaleObservation, ResizeObservation
+from gym.wrappers import FrameStack, GrayScaleObservation
+from gym.spaces import Box
+import cv2
+
 import pdb
 
 class SkipEnv(gym.Wrapper):
@@ -20,6 +23,24 @@ class SkipEnv(gym.Wrapper):
                 break
 
         return obs, total_reward, done, info
+
+
+class ResizeObservation(gym.ObservationWrapper):
+    """Downsample the image observation to a square image. """
+    def __init__(self, env, shape):
+        super().__init__(env)
+        if isinstance(shape, int):
+            self.shape = (shape, shape)
+        else:
+            self.shape = tuple(shape)
+
+        obs_shape = self.shape + self.observation_space.shape[2:]
+        self.observation_space = Box(low=0, high=255, shape=obs_shape, dtype=np.uint8)
+
+    def observation(self, observation):
+        observation = cv2.resize(observation, self.shape, interpolation=cv2.INTER_AREA)
+        return observation
+
 
 def wrapper(env):
     # skip to every 4th frame. Remove redundant info. to speed up training
