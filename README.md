@@ -1,7 +1,7 @@
 # MadMario
 Interactive tutorial to build a learning Mario, for first-time RL learners
 
-## Setup
+## Set Up
 1. Install [conda](https://www.anaconda.com/products/individual)
 2. Install dependencies with `environment.yml`
     ```
@@ -14,7 +14,7 @@ Interactive tutorial to build a learning Mario, for first-time RL learners
     conda activate myenv
     ```
 
-## Project structure
+## Project Structure
 **main.py**
 Loop for action, memorizing and learning. To start the agent:
 ```
