@@ -28,8 +28,6 @@ class DQNAgent:
         self.step = 0
         # number of experiences between updating online q
         self.learn_every = 3
-        # number of steps since last learning (0, ..., learn_every-1)
-        self.learn_step = 0
         # number of experiences to collect before training
         # self.burnin = 1e5
         self.burnin = 1e2
@@ -92,8 +90,7 @@ class DQNAgent:
         if self.step < self.burnin:
             return
         # break if no training
-        if self.learn_step < self.learn_every:
-            self.learn_step += 1
+        if self.step % self.learn_every != 0:
             return
         # sample batch
         batch = random.sample(self.memory, self.batch_size)
@@ -116,8 +113,6 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        # reset learn step
-        self.learn_step = 0
         # TODO Log shit
 
 
