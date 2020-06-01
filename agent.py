@@ -32,7 +32,7 @@ class DQNAgent:
         # self.burnin = 1e5
         self.burnin = 1e2
         # number of experiences between updating target q with online q
-        self.copy_every = 1e4
+        self.sync_every = 1e4
         # number of experiences between saving the current agent
         self.save_every = 5e5
 
@@ -81,7 +81,7 @@ class DQNAgent:
         """Update online action value (Q) function with a batch of experiences
         """
         # sync target network
-        if self.step % self.copy_every == 0:
+        if self.step % self.sync_every == 0:
             self.sync_target_q()
         # checkpoint model
         if self.step % self.save_every == 0:
