@@ -45,6 +45,8 @@ class DQNAgent:
             "checkpoints",
             f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
         )
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
         # batch size used to update online q
         self.batch_size = 32
@@ -130,8 +132,6 @@ class DQNAgent:
     def save_model(self):
         """Save the current agent
         """
-        if not os.path.exists(self.save_dir):
-            os.makedirs(self.save_dir)
         save_path = os.path.join(self.save_dir, f"online_q_{self.step % self.save_total}.chkpt")
         torch.save(self.online_q.state_dict(), save_path)
 

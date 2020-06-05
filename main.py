@@ -41,6 +41,9 @@ log = {
     "losses": [],
     "q_values": []
 }
+log_file = os.path.join(agent.save_dir, "log.txt")
+with open(log_file, "w") as f:
+    f.write(f"{'MeanReward':>15}{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}\n")
 
 # Timing
 start = time.time()
@@ -100,10 +103,10 @@ for e in range(episodes):
 
     # Print & Log
     if e % 50 == 0:
-        mean_reward = np.round(np.mean(log['rewards'][-100:]), 5)
-        mean_length = np.round(np.mean(log['lengths'][-100:]), 5)
-        mean_loss = np.round(np.mean(log['losses'][-100:]), 5)
-        mean_q_value = np.round(np.mean(log['q_values'][-100:]), 5)
+        mean_reward = np.round(np.mean(log['rewards'][-100:]), 3)
+        mean_length = np.round(np.mean(log['lengths'][-100:]), 3)
+        mean_loss = np.round(np.mean(log['losses'][-100:]), 3)
+        mean_q_value = np.round(np.mean(log['q_values'][-100:]), 3)
         print(
             f"Episode {e} - "
             f"Step {agent.step} - "
@@ -117,21 +120,5 @@ for e in range(episodes):
         start = time.time()
         step = agent.step
 
-        log_file = os.path.join(agent.save_dir, "log.json")
-        if not os.path.exists(log_file):
-            json_log = {
-                "rewards": [mean_reward],
-                "lengths": [mean_length],
-                "losses": [mean_loss],
-                "q_values": [mean_q_value]
-            }
-        else:
-            with open(log_file) as f:
-                json_log = json.load(f)
-                json_log["rewards"].append(mean_reward)
-                json_log["lengths"].append(mean_length)
-                json_log["losses"].append(mean_loss)
-                json_log["q_values"].append(mean_q_value)
-
-        with open(log_file, 'w') as f:
-            json.dump(json_log, f, indent=2)
+        with open(log_file, "a") as f:
+            f.write(f"{mean_reward:15.3f}{mean_length:15.3f}{mean_loss:15.3f}{mean_q_value:15.3f}\n")
