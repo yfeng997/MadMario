@@ -8,6 +8,7 @@ import time
 import cv2
 import os
 import json
+import datetime
 
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
@@ -43,11 +44,10 @@ log = {
 }
 log_file = os.path.join(agent.save_dir, "log.txt")
 with open(log_file, "w") as f:
-    f.write(f"{'MeanReward':>15}{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}\n")
-
-# Timing
-start = time.time()
-step = 0
+    f.write(
+        f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
+        f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}{'Time':>20}\n"
+    )
 
 # Main loop
 for e in range(episodes):
@@ -107,18 +107,21 @@ for e in range(episodes):
         mean_length = np.round(np.mean(log['lengths'][-100:]), 3)
         mean_loss = np.round(np.mean(log['losses'][-100:]), 3)
         mean_q_value = np.round(np.mean(log['q_values'][-100:]), 3)
+        eps = np.round(agent.eps, 3)
         print(
             f"Episode {e} - "
             f"Step {agent.step} - "
-            f"Step/sec {np.round((agent.step - step) / (time.time() - start))} - "
-            f"Epsilon {np.round(agent.eps, 3)} - "
+            f"Epsilon {eps} - "
             f"Mean Reward {mean_reward} - "
             f"Mean Length {mean_length} - "
             f"Mean Loss {mean_loss} - "
-            f"Mean Q Value {mean_q_value}"
+            f"Mean Q Value {mean_q_value} - "
+            f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
         )
-        start = time.time()
-        step = agent.step
 
         with open(log_file, "a") as f:
-            f.write(f"{mean_reward:15.3f}{mean_length:15.3f}{mean_loss:15.3f}{mean_q_value:15.3f}\n")
+            f.write(
+                f"{e:8d}{agent.step:10d}{eps:10.3f}"
+                f"{mean_reward:15.3f}{mean_length:15.3f}{mean_loss:15.3f}{mean_q_value:15.3f}"
+                f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
+            )
