@@ -5,6 +5,7 @@ import numpy as np
 import random
 from neural import ConvNet
 import os
+import datetime
 
 import pdb
 
@@ -38,7 +39,12 @@ class DQNAgent:
         # number of experiences between saving the current agent
         self.save_every = 1e5
         # number of consecutive marios to save
-        self.save_total = 10
+        self.save_total = 5
+        # a new directory to save marios to
+        self.save_dir = os.path.join(
+            "checkpoints",
+            f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
+        )
 
         # batch size used to update online q
         self.batch_size = 32
@@ -92,10 +98,10 @@ class DQNAgent:
             self.save_model()
         # break if burn-in
         if self.step < self.burnin:
-            return
+            return None, None
         # break if no training
         if self.step % self.learn_every != 0:
-            return
+            return None, None
         # sample batch
         batch = random.sample(self.memory, self.batch_size)
         state, next_state, action, reward, done = map(np.array, zip(*batch))
@@ -112,19 +118,21 @@ class DQNAgent:
         curr_q = self.predict(state, 'online')
         pred_q = curr_q[np.arange(0, self.batch_size), action]
         # huber loss
-        loss = nn.functional.mse_loss(pred_q, target_q)
+        loss = nn.functional.smooth_l1_loss(pred_q, target_q)
         # update online_q
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
+        return pred_q.mean().item(), loss.item()
 
-    def save_model(self, save_dir='checkpoints'):
+
+    def save_model(self):
         """Save the current agent
         """
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        save_path = os.path.join(save_dir, f"online_q_{self.step % self.save_total}.chkpt")
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+        save_path = os.path.join(self.save_dir, f"online_q_{self.step % self.save_total}.chkpt")
         torch.save(self.online_q.state_dict(), save_path)
 
 
@@ -134,11 +142,14 @@ class DQNAgent:
         self.target_q.load_state_dict(self.online_q.state_dict())
 
 
-    def replay(self, env, load_dir="checkpoints", load_idx=0):
-        load_path = os.path.join(load_dir, f"online_q_{load_idx}.chkpt")
+    def replay(self, env, load_dir=None, load_idx=0):
+        if not load_dir:
+            dirs = os.listdir("checkpoints")
+            load_dir = sorted(dirs)[-1]
+        load_path = os.path.join("checkpoints", load_dir, f"online_q_{load_idx}.chkpt")
+
         if not os.path.exists(load_path):
             return
-
         state_dict = torch.load(load_path)
         self.online_q.load_state_dict(state_dict)
         self.eps = self.eps_min

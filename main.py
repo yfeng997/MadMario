@@ -5,16 +5,21 @@ from agent import DQNAgent
 import numpy as np
 import pdb
 import time
+import cv2
+import os
+import json
 
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
-# action space: [0 (no action), 1 (walk right), 2 (jump right), 3 (run right)]
-# observation space: 240 x 256 x 3
+# Action Space:
+# NOOP: no action
+# right: walk right
+# right, A: jump right
+# right, B: run right
+# Observation Space: 240 x 256 x 3
 env = JoypadSpace(env,
-    # [['NOOP'],
     [['right'],
     ['right', 'A']]
-    # ['right', 'B'],]
 )
 # observation space: 4 (#frame) x 84 (height) x 84 (width)
 env = wrapper(env)
@@ -28,7 +33,14 @@ agent = DQNAgent(state_dim=state_dim, action_dim=action_dim, max_memory=100000, 
 
 # Episodes
 episodes = 10000
-rewards = []
+
+# Log
+log = {
+    "rewards": [],
+    "lengths": [],
+    "losses": [],
+    "q_values": []
+}
 
 # Timing
 start = time.time()
@@ -40,9 +52,12 @@ for e in range(episodes):
     # Reset env
     state = env.reset()
 
-    # Reward
-    total_reward = 0
-    iter = 0
+    # Logging
+    ep_reward = 0.0
+    ep_length = 0
+    ep_total_loss = 0.0
+    ep_total_q = 0.0
+    ep_learn_length = 1 # used for mean loss/q_value
 
     # Play
     while True:
@@ -59,38 +74,64 @@ for e in range(episodes):
         # Remember
         agent.remember(experience=(state, next_state, action, reward, done))
 
-        # Replay
-        agent.learn()
+        # Learn (conditional)
+        q_value, loss = agent.learn()
 
-        # Total reward
-        total_reward += reward
+        # Logging
+        ep_reward += reward
+        ep_length += 1
+        if q_value and loss:
+            ep_total_loss += loss
+            ep_total_q += q_value
+            ep_learn_length += 1
 
         # Update state
         state = next_state
-
-        # Increment
-        iter += 1
 
         # If done break loop
         if done or info['flag_get']:
             break
 
-    # Rewards
-    rewards.append(total_reward / iter)
+    # Log
+    log["rewards"].append(ep_reward)
+    log["lengths"].append(ep_length)
+    log["losses"].append(np.round(ep_total_loss/ep_learn_length, 5))
+    log["q_values"].append(np.round(ep_total_q/ep_learn_length, 5))
 
-    # Print
-    if e % 10 == 0:
-        print('Episode {e} - '
-              'Frame {f} - '
-              'Frames/sec {fs} - '
-              'Epsilon {eps} - '
-              'Mean Reward {r}'.format(e=e,
-                                       f=agent.step,
-                                       fs=np.round((agent.step - step) / (time.time() - start)),
-                                       eps=np.round(agent.eps, 4),
-                                       r=np.mean(rewards[-100:])))
+    # Print & Log
+    if e % 50 == 0:
+        mean_reward = np.round(np.mean(log['rewards'][-100:]), 5)
+        mean_length = np.round(np.mean(log['lengths'][-100:]), 5)
+        mean_loss = np.round(np.mean(log['losses'][-100:]), 5)
+        mean_q_value = np.round(np.mean(log['q_values'][-100:]), 5)
+        print(
+            f"Episode {e} - "
+            f"Step {agent.step} - "
+            f"Step/sec {np.round((agent.step - step) / (time.time() - start))} - "
+            f"Epsilon {np.round(agent.eps, 3)} - "
+            f"Mean Reward {mean_reward} - "
+            f"Mean Length {mean_length} - "
+            f"Mean Loss {mean_loss} - "
+            f"Mean Q Value {mean_q_value}"
+        )
         start = time.time()
         step = agent.step
 
-# Save rewards
-np.save('rewards.npy', rewards)
+        log_file = os.path.join(agent.save_dir, "log.json")
+        if not os.path.exists(log_file):
+            json_log = {
+                "rewards": [mean_reward],
+                "lengths": [mean_length],
+                "losses": [mean_loss],
+                "q_values": [mean_q_value]
+            }
+        else:
+            with open(log_file) as f:
+                json_log = json.load(f)
+                json_log["rewards"].append(mean_reward)
+                json_log["lengths"].append(mean_length)
+                json_log["losses"].append(mean_loss)
+                json_log["q_values"].append(mean_q_value)
+
+        with open(log_file, 'w') as f:
+            json.dump(json_log, f, indent=2)

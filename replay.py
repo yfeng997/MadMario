@@ -6,10 +6,8 @@ from agent import DQNAgent
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = JoypadSpace(env,
-    # [['NOOP'],
     [['right'],
     ['right', 'A']]
-    # ['right', 'B'],]
 )
 env = wrapper(env)
 
