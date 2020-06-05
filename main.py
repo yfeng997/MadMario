@@ -11,10 +11,10 @@ env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 # action space: [0 (no action), 1 (walk right), 2 (jump right), 3 (run right)]
 # observation space: 240 x 256 x 3
 env = JoypadSpace(env,
-    [['NOOP'],
-    ['right'],
-    ['right', 'A'],
-    ['right', 'B'],]
+    # [['NOOP'],
+    [['right'],
+    ['right', 'A']]
+    # ['right', 'B'],]
 )
 # observation space: 4 (#frame) x 84 (height) x 84 (width)
 env = wrapper(env)
@@ -48,7 +48,7 @@ for e in range(episodes):
     while True:
 
         # Show env
-        env.render()
+        # env.render()
 
         # Run agent
         action = agent.act(state=state)
@@ -79,7 +79,7 @@ for e in range(episodes):
     rewards.append(total_reward / iter)
 
     # Print
-    if e % 100 == 0:
+    if e % 10 == 0:
         print('Episode {e} - '
               'Frame {f} - '
               'Frames/sec {fs} - '

@@ -4,6 +4,8 @@ import torch.nn as nn
 import numpy as np
 import random
 from neural import ConvNet
+import os
+
 import pdb
 
 class DQNAgent:
@@ -29,12 +31,14 @@ class DQNAgent:
         # number of experiences between updating online q
         self.learn_every = 3
         # number of experiences to collect before training
-        # self.burnin = 1e5
-        self.burnin = 1e2
+        self.burnin = 1e5
+        # self.burnin = 1e2
         # number of experiences between updating target q with online q
         self.sync_every = 1e4
         # number of experiences between saving the current agent
-        self.save_every = 5e5
+        self.save_every = 1e5
+        # number of consecutive marios to save
+        self.save_total = 10
 
         # batch size used to update online q
         self.batch_size = 32
@@ -84,7 +88,7 @@ class DQNAgent:
         if self.step % self.sync_every == 0:
             self.sync_target_q()
         # checkpoint model
-        if self.step % self.save_every == 0:
+        if self.step % self.save_every < self.save_total:
             self.save_model()
         # break if burn-in
         if self.step < self.burnin:
@@ -113,15 +117,40 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        # TODO Log shit
 
 
-    def save_model(self):
+    def save_model(self, save_dir='checkpoints'):
         """Save the current agent
         """
-        return
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        save_path = os.path.join(save_dir, f"online_q_{self.step % self.save_total}.chkpt")
+        torch.save(self.online_q.state_dict(), save_path)
+
 
     def sync_target_q(self):
         """Update target action value (Q) function with online action value (Q) function
         """
         self.target_q.load_state_dict(self.online_q.state_dict())
+
+
+    def replay(self, env, load_dir="checkpoints", load_idx=0):
+        load_path = os.path.join(load_dir, f"online_q_{load_idx}.chkpt")
+        if not os.path.exists(load_path):
+            return
+
+        state_dict = torch.load(load_path)
+        self.online_q.load_state_dict(state_dict)
+        self.eps = self.eps_min
+
+        state = env.reset()
+        total_reward = 0
+        while True:
+            env.render()
+            action = self.act(state=state)
+            next_state, reward, done, info = env.step(action=action)
+            total_reward += reward
+            state = next_state
+            if done or info['flag_get']:
+                break
+        return total_reward
