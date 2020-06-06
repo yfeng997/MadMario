@@ -32,8 +32,8 @@ class DQNAgent:
         # number of experiences between updating online q
         self.learn_every = 3
         # number of experiences to collect before training
-        # self.burnin = 1e5
-        self.burnin = 1e2
+        self.burnin = 1e5
+        # self.burnin = 1e2
         # number of experiences between updating target q with online q
         self.sync_every = 1e4
         # number of experiences between saving the current agent
