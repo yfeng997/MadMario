@@ -71,13 +71,13 @@ for e in range(episodes):
         # Run agent
         action = agent.act(state=state)
 
-        # Perform action
+        # Perform action (20% time cost)
         next_state, reward, done, info = env.step(action=action)
 
         # Remember
         agent.remember(experience=(state, next_state, action, reward, done))
 
-        # Learn (conditional)
+        # Learn (conditional) (80% time cost)
         q_value, loss = agent.learn()
 
         # Logging
