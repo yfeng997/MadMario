@@ -33,10 +33,7 @@ This will by default look at the most recent  folder under `checkpoints/`, e.g. 
 
 ## Project Structure
 **main.py**
-Loop for action, memorizing and learning. To start the agent:
-```
-python main.py
-```
+Loop for action, memorizing and learning.
 
 **tutorial.ipynb**
 Interactive tutorial with extensive explanation and feedback. Run it on [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb#recent=true).  
