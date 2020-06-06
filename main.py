@@ -48,6 +48,8 @@ with open(log_file, "w") as f:
         f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
         f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}{'Time':>20}\n"
     )
+start_time = time.time()
+start_step = agent.step
 
 # Main loop
 for e in range(episodes):
@@ -108,9 +110,13 @@ for e in range(episodes):
         mean_loss = np.round(np.mean(log['losses'][-100:]), 3)
         mean_q_value = np.round(np.mean(log['q_values'][-100:]), 3)
         eps = np.round(agent.eps, 3)
+        step_time = np.round((time.time() - start_time)/(agent.step - start_step), 3)
+        start_time = time.time()
+        start_step = agent.step
         print(
             f"Episode {e} - "
             f"Step {agent.step} - "
+            f"Step Time {step_time} - "
             f"Epsilon {eps} - "
             f"Mean Reward {mean_reward} - "
             f"Mean Length {mean_length} - "

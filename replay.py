@@ -17,4 +17,4 @@ action_dim = env.action_space.n
 agent = DQNAgent(state_dim=state_dim, action_dim=action_dim, max_memory=100000, double_q=True)
 
 for agent_idx in range(agent.save_total):
-    agent.replay(env, load_idx=agent_idx)
+    agent.replay(env, load_dir="2020-06-05T14-22-14", load_idx=agent_idx)
