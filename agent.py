@@ -64,7 +64,7 @@ class DQNAgent:
         model is either 'online' or 'target'
         """
         # LazyFrame -> np array -> torch tensor
-        state_float = torch.FloatTensor(np.array(state), device=self.device)
+        state_float = torch.FloatTensor(np.array(state)).to(self.device)
         # normalize
         state_float = state_float / 255.
         if model == 'online':
@@ -118,10 +118,10 @@ class DQNAgent:
         if self.double_q:
             q = self.predict(next_state, 'online')
             q_idx = torch.max(q, axis=1)[1]
-            target_q = torch.FloatTensor(reward, device=self.device) + torch.FloatTensor(1. - done, device=self.device) \
+            target_q = torch.FloatTensor(reward).to(self.device) + torch.FloatTensor(1. - done).to(self.device) \
                 * self.gamma * next_q[np.arange(0, self.batch_size), q_idx]
         else:
-            target_q = torch.FloatTensor(reward, device=self.device) + torch.FloatTensor(1. - done, device=self.device) \
+            target_q = torch.FloatTensor(reward).to(self.device) + torch.FloatTensor(1. - done).to(self.device) \
                 * self.gamma * torch.max(next_q, axis=1)[0]
         # get predicted q values from online_q and actions taken
         curr_q = self.predict(state, 'online')
