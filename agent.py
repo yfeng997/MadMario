@@ -32,8 +32,8 @@ class DQNAgent:
         # number of experiences between updating online q
         self.learn_every = 3
         # number of experiences to collect before training
-        self.burnin = 1e5
-        # self.burnin = 1e2
+        # self.burnin = 1e5
+        self.burnin = 1e2
         # number of experiences between updating target q with online q
         self.sync_every = 1e4
         # number of experiences between saving the current agent
@@ -50,10 +50,12 @@ class DQNAgent:
 
         # batch size used to update online q
         self.batch_size = 32
+        # train on cpu/gpu
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # online action value function, Q(s, a)
-        self.online_q = ConvNet(input_dim=state_dim, output_dim=action_dim)
+        self.online_q = ConvNet(input_dim=state_dim, output_dim=action_dim).to(self.device)
         # target action value function, Q'(s, a)
-        self.target_q = ConvNet(input_dim=state_dim, output_dim=action_dim)
+        self.target_q = ConvNet(input_dim=state_dim, output_dim=action_dim).to(self.device)
         # optimizer
         self.optimizer = torch.optim.Adam(self.online_q.parameters(), lr=0.00025)
 
@@ -61,7 +63,10 @@ class DQNAgent:
         """Given a state, predict Q values of all actions
         model is either 'online' or 'target'
         """
-        state_float = torch.tensor(np.array(state)).float() / 255.
+        # to tensor
+        state_float = torch.FloatTensor(np.array(state)).to(self.device)
+        # normalize
+        state_float = state_float / 255.
         if model == 'online':
             return self.online_q(state_float)
         if model == 'target':
