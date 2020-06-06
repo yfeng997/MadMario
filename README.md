@@ -15,7 +15,7 @@ Interactive tutorial to build a learning Mario, for first-time RL learners
     conda activate myenv
     ```
 
-## Running Up
+## Running
 To start the **learning** process for Mario, 
 ```
 python main.py
