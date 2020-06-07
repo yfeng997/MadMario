@@ -9,6 +9,7 @@ import cv2
 import os
 import json
 import datetime
+import sys
 
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
@@ -131,3 +132,8 @@ for e in range(episodes):
                 f"{mean_reward:15.3f}{mean_length:15.3f}{mean_loss:15.3f}{mean_q_value:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
             )
+
+        # Running on Colab, download checkpoints to local
+        if 'google.colab' in sys.modules:
+            from google.colab import files
+            files.download(os.path.join(agent.save_dir, "online_q_1.chkpt"))
