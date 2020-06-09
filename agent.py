@@ -143,6 +143,27 @@ class DQNAgent:
         torch.save(self.online_q.state_dict(), save_path)
 
 
+    def load_model(self, chkpt_dir, eps):
+        # update epsilon
+        self.eps = eps
+        # a new directory to save marios to
+        self.save_dir = os.path.join(
+            "checkpoints",
+            f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
+        )
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+        # load online q
+        if not os.path.exists(chkpt_dir):
+            return
+        state_dict = torch.load(chkpt_dir, map_location=self.device)
+        self.online_q.load_state_dict(state_dict)
+        # sync target q
+        self.sync_target_q()
+        self.optimizer = torch.optim.Adam(self.online_q.parameters(), lr=0.00025)
+
+
     def sync_target_q(self):
         """Update target action value (Q) function with online action value (Q) function
         """
@@ -157,7 +178,7 @@ class DQNAgent:
 
         if not os.path.exists(load_path):
             return
-        state_dict = torch.load(load_path)
+        state_dict = torch.load(load_path, map_location=self.device)
         self.online_q.load_state_dict(state_dict)
         self.eps = self.eps_min
 

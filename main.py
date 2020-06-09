@@ -32,6 +32,7 @@ action_dim = env.action_space.n
 
 # Agent
 agent = DQNAgent(state_dim=state_dim, action_dim=action_dim, max_memory=100000, double_q=True)
+# agent.load_model('checkpoints/2020-06-08T08-00-00/online_q_0.chkpt', 0.703)
 
 # Episodes
 episodes = 10000
