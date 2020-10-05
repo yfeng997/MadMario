@@ -1,4 +1,4 @@
-__pycache__
-checkpoints/
+**/__pycache__
+**/checkpoints
 *.npy
 .*
