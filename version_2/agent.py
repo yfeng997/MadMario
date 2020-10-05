@@ -84,11 +84,11 @@ class Mario:
         reward (float),
         done(bool))
         """
-        FloatTensor = lambda t: torch.cuda.FloatTensor(t) if self.use_cuda else torch.FloatTensor(t)
-        Tensor = lambda t: torch.tensor(t).cuda() if self.use_cuda else torch.tensor(t)
-
-        state, next_state = map(FloatTensor, [state, next_state])
-        action, reward, done = map(Tensor, [action, reward, done])
+        state = torch.FloatTensor(state).cuda() if self.use_cuda else torch.FloatTensor(state)
+        next_state = torch.FloatTensor(next_state).cuda() if self.use_cuda else torch.FloatTensor(next_state)
+        action = torch.LongTensor([action]).cuda() if self.use_cuda else torch.LongTensor([action])
+        reward = torch.DoubleTensor([reward]).cuda() if self.use_cuda else torch.DoubleTensor([reward])
+        done = torch.BoolTensor([done]).cuda() if self.use_cuda else torch.BoolTensor([done])
 
         # conver everything to [GPU] tensors
         # state, next_state, reward = map(FloatTensor, [state, next_state, reward]) # convert to float tensor
@@ -99,11 +99,7 @@ class Mario:
 
     def recall(self):
         batch = random.sample(self.memory, self.batch_size)
-        try:
-            state, next_state, action, reward, done = map(torch.stack, zip(*batch))
-        except:
-            import pdb
-            pdb.set_trace()
+        state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action, reward, done
 
 
