@@ -11,27 +11,22 @@ from neural import MarioNet
 from collections import deque
 
 class Mario:
-    def __init__(self, state_dim, action_dim):
+    def __init__(self, state_dim, action_dim, save_dir):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.memory = deque(maxlen=100000)
-        self.batch_size = 256
+        self.batch_size = 32
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.gamma = 0.9
         self.nb_steps = 0
-        self.burnin = 1e3  # min. experiences before training
-        self.learn_every = 5   # no. of experiences between updates to Q_online
+        self.burnin = 1e2  # min. experiences before training
+        self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
         self.save_every = 1e5   # no. of experiences between saving Mario Net
         self.save_total = 10    # total number of MarioNet to save
-        self.save_dir = os.path.join(
-            "checkpoints",
-            f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
-        )
-        if not os.path.exists(self.save_dir):
-            os.makedirs(self.save_dir)
+        self.save_dir = save_dir
 
         self.use_cuda = torch.cuda.is_available()
 

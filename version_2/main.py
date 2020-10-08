@@ -1,3 +1,4 @@
+import os
 # Gym is an OpenAI toolkit for RL
 import gym
 # Super Mario environment for OpenAI Gym
@@ -11,7 +12,7 @@ from gym.wrappers import FrameStack, GrayScaleObservation
 #NES Emulator for OpenAI Gym
 from nes_py.wrappers import JoypadSpace
 
-from metrics import clear_metrics, collect_metrics, display_metrics, log_metrics
+from metrics import MetricLogger
 from agent import Mario
 from wrappers import ResizeObservation, SkipFrame
 
@@ -38,7 +39,15 @@ env.reset()
 use_cuda = torch.cuda.is_available()
 print(f"Using CUDA: {use_cuda} \n")
 
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n)
+save_dir = os.path.join(
+    "checkpoints",
+    f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
+)
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
+logger = MetricLogger(save_dir)
 
 episodes = 10000
 
@@ -46,7 +55,6 @@ episodes = 10000
 for e in range(episodes):
 
     state = env.reset()
-    metrics = clear_metrics()
 
     # Play the game!
     while True:
@@ -66,20 +74,17 @@ for e in range(episodes):
         # 7. Learn
         q, loss = mario.learn()
 
-        # 8. Loggings
-        metrics = collect_metrics(metrics, reward, loss, q)
+        # 8. Logging
+        logger.log_step(reward, loss, q)
 
         # 9. Update state
         state = next_state
 
-        # If done break loop
+        # 10. Check if end of game
         if done or info['flag_get']:
-            print(
-                f"{display_metrics(metrics)} | "
-                f"Total Experiences: {mario.nb_steps} | "
-                f"{datetime.datetime.now().strftime('%H:%M:%S')} "
-            )
-
-            log_metrics(metrics, mario.save_dir)
-
             break
+
+    logger.log_episode()
+
+    if e % 20 == 0:
+        logger.record(episode=e, epsilon=mario.exploration_rate)

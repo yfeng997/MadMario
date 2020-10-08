@@ -23,7 +23,7 @@ env = SkipFrame(env, skip=4)
 
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n)
 
-load_dir = "2020-10-04T21-25-13"
+load_dir = "2020-10-04T23-56-05"
 
 for mario_idx in range(mario.save_total):
     load_path = os.path.join(load_dir, f"mario_net_{mario_idx}.chkpt")
