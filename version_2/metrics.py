@@ -9,7 +9,7 @@ class MetricLogger():
         self.save_log = os.path.join(save_dir, "log")
         with open(self.save_log, "w") as f:
             f.write(
-                f"{'Episode':>8}{'Epsilon':>10}{'MeanReward':>15}"
+                f"{'Episode':>8}{'Epsilon':>10}{'Step':>8}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
                 f"{'TimeDelta':>15}{'Time':>20}\n"
             )
@@ -61,7 +61,7 @@ class MetricLogger():
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
 
-    def record(self, episode, epsilon):
+    def record(self, episode, epsilon, step):
         mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
@@ -74,6 +74,7 @@ class MetricLogger():
         print(
             f"Episode {episode} - "
             f"Epsilon {epsilon} - "
+            f"Step {step} - "
             f"Mean Reward {mean_ep_reward} - "
             f"Mean Length {mean_ep_length} - "
             f"Mean Loss {mean_ep_loss} - "
@@ -84,7 +85,7 @@ class MetricLogger():
 
         with open(self.save_log, "a") as f:
             f.write(
-                f"{episode:8d}{epsilon:10.3f}"
+                f"{episode:8d}{epsilon:10.3f}{step:8d}"
                 f"{mean_ep_reward:15.3f}{mean_ep_length:15.3f}{mean_ep_loss:15.3f}{mean_ep_q:15.3f}"
                 f"{time_since_last_record:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"

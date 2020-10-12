@@ -88,4 +88,8 @@ for e in range(episodes):
     logger.log_episode()
 
     if e % 20 == 0:
-        logger.record(episode=e, epsilon=mario.exploration_rate)
+        logger.record(
+            episode=e,
+            epsilon=mario.exploration_rate,
+            step=mario.curr_step
+        )

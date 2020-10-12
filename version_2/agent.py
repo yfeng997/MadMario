@@ -39,7 +39,7 @@ class Mario:
             self.net = self.net.to(device='cuda')
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
-        self.loss_fn = nn.MSELoss()
+        self.loss_fn = nn.SmoothL1Loss()
 
 
     def act(self, state):
