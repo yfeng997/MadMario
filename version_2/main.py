@@ -7,7 +7,7 @@ import torch
 from torch import nn
 import random, datetime, numpy as np, cv2
 
-from gym.wrappers import FrameStack, GrayScaleObservation
+from gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
 
 #NES Emulator for OpenAI Gym
 from nes_py.wrappers import JoypadSpace
@@ -29,10 +29,11 @@ env = JoypadSpace(
 )
 
 # Apply Wrappers to environment
+env = SkipFrame(env, skip=4)
 env = GrayScaleObservation(env, keep_dim=False)
 env = ResizeObservation(env, shape=84)
+env = TransformObservation(env, f=lambda x: x / 255.)
 env = FrameStack(env, num_stack=4)
-env = SkipFrame(env, skip=4)
 
 env.reset()
 

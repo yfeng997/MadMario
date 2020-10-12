@@ -2,16 +2,21 @@ import os
 import numpy as np
 import time
 import datetime
+import matplotlib.pyplot as plt
 
 class MetricLogger():
     def __init__(self, save_dir):
-        self.save_file = os.path.join(save_dir, "log")
-        with open(self.save_file, "w") as f:
+        self.save_log = os.path.join(save_dir, "log")
+        with open(self.save_log, "w") as f:
             f.write(
                 f"{'Episode':>8}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
                 f"{'TimeDelta':>15}{'Time':>20}\n"
             )
+        self.ep_rewards_plot = os.path.join(save_dir, "reward_plot.jpg")
+        self.ep_lengths_plot = os.path.join(save_dir, "length_plot.jpg")
+        self.ep_avg_losses_plot = os.path.join(save_dir, "loss_plot.jpg")
+        self.ep_avg_qs_plot = os.path.join(save_dir, "q_plot.jpg")
 
         # History metrics
         self.ep_rewards = []
@@ -77,10 +82,14 @@ class MetricLogger():
             f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
         )
 
-        with open(self.save_file, "a") as f:
+        with open(self.save_log, "a") as f:
             f.write(
                 f"{episode:8d}{epsilon:10.3f}"
                 f"{mean_ep_reward:15.3f}{mean_ep_length:15.3f}{mean_ep_loss:15.3f}{mean_ep_q:15.3f}"
                 f"{time_since_last_record:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
             )
+
+        for metric in ["ep_rewards", "ep_lengths", "ep_avg_losses", "ep_avg_qs"]:
+            plt.plot(getattr(self, metric))
+            plt.savefig(getattr(self, f"{metric}_plot"))

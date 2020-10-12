@@ -21,15 +21,15 @@ env = ResizeObservation(env, shape=84)
 env = FrameStack(env, num_stack=4)
 env = SkipFrame(env, skip=4)
 
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n)
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=None)
 
-load_dir = "2020-10-04T23-56-05"
+load_dir = "2020-10-08T11-00-32"
 
 for mario_idx in range(mario.save_total):
     load_path = os.path.join(load_dir, f"mario_net_{mario_idx}.chkpt")
     mario.load(load_path)
     mario.exploration_rate = mario.exploration_rate_min
-    mario.nb_steps = 0
+    mario.curr_step = 0
 
     state = env.reset()
     total_reward = 0
@@ -42,6 +42,6 @@ for mario_idx in range(mario.save_total):
         if done or info['flag_get']:
             break
     print(
-        f"#{mario_idx}. Mario finished after {mario.nb_steps} steps "
+        f"#{mario_idx}. Mario finished after {mario.curr_step} steps "
         f"with a total reward of {total_reward}"
     )

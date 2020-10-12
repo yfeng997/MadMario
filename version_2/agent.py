@@ -9,6 +9,8 @@ import random, datetime, numpy as np, cv2
 
 from neural import MarioNet
 from collections import deque
+import pdb
+
 
 class Mario:
     def __init__(self, state_dim, action_dim, save_dir):
@@ -20,8 +22,8 @@ class Mario:
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.gamma = 0.9
-        self.nb_steps = 0
-        self.burnin = 1e2  # min. experiences before training
+        self.curr_step = 0
+        self.burnin = 1e5  # min. experiences before training
         self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
         self.save_every = 1e5   # no. of experiences between saving Mario Net
@@ -55,8 +57,8 @@ class Mario:
 
         # EXPLOIT
         else:
-            FloatTensor = lambda t: torch.cuda.FloatTensor(t) if self.use_cuda else torch.FloatTensor(t)
-            state = FloatTensor(state).unsqueeze(0)
+            state = torch.FloatTensor(state).cuda() if self.use_cuda else torch.FloatTensor(state)
+            state = state.unsqueeze(0)
             action_values = self.net(state, model='online')
             action_idx = torch.argmax(action_values, axis=1).item()
 
@@ -65,7 +67,7 @@ class Mario:
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
 
         # increment step
-        self.nb_steps += 1
+        self.curr_step += 1
         return action_idx
 
     def cache(self, state, next_state, action, reward, done):
@@ -95,18 +97,19 @@ class Mario:
     def recall(self):
         batch = random.sample(self.memory, self.batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
-        return state, next_state, action, reward, done
+        return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
 
 
     def td_estimate(self, state, action):
-        current_Q = self.net(state, model='online')[:, action] # Q_online(s,a)
+        current_Q = self.net(state, model='online')[np.arange(0, self.batch_size), action] # Q_online(s,a)
         return current_Q
 
 
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
-        best_action = torch.argmax(self.net(next_state, model='online'), axis=1)
-        next_Q = self.net(next_state, model='target')[:, best_action]
+        next_state_Q = self.net(next_state, model='online')
+        best_action = torch.argmax(next_state_Q, axis=1)
+        next_Q = self.net(next_state, model='target')[np.arange(0, self.batch_size), best_action]
         # When done == True, there is no next_Q
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
@@ -120,22 +123,22 @@ class Mario:
 
 
     def sync_Q_target(self):
-        self.net.target_features.load_state_dict(self.net.online_features.state_dict())
-        self.net.target_fc.load_state_dict(self.net.online_fc.state_dict())
+        self.net.target.load_state_dict(self.net.online.state_dict())
 
 
     def learn(self):
-        if self.nb_steps % self.save_every < self.save_total:
+        if self.curr_step % self.sync_every == 0:
+            self.sync_Q_target()
+
+        if self.curr_step % self.save_every < self.save_total:
             self.save()
 
-        if self.nb_steps < self.burnin:
+        if self.curr_step < self.burnin:
             return None, None
 
-        if self.nb_steps % self.learn_every != 0:
+        if self.curr_step % self.learn_every != 0:
             return None, None
 
-        if self.nb_steps % self.sync_every == 0:
-            self.sync_Q_target()
 
         # Sample from memory
         state, next_state, action, reward, done = self.recall()
@@ -155,9 +158,9 @@ class Mario:
     def save(self):
         """Periodically save MarioNet
         """
-        save_path = os.path.join(self.save_dir, f"mario_net_{self.nb_steps % self.save_total}.chkpt")
+        save_path = os.path.join(self.save_dir, f"mario_net_{self.curr_step % self.save_total}.chkpt")
         torch.save(self.net.state_dict(), save_path)
-        print(f"MarioNet saved to {save_path} at step {self.nb_steps}")
+        print(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
     def load(self, load_path):
