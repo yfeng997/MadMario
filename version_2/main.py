@@ -50,7 +50,7 @@ if not os.path.exists(save_dir):
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
 logger = MetricLogger(save_dir)
 
-episodes = 10000
+episodes = 15000
 
 ### for Loop that train the model num_episodes times by playing the game
 for e in range(episodes):

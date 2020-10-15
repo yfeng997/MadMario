@@ -9,7 +9,7 @@ class MetricLogger():
         self.save_log = os.path.join(save_dir, "log")
         with open(self.save_log, "w") as f:
             f.write(
-                f"{'Episode':>8}{'Epsilon':>10}{'Step':>8}{'MeanReward':>15}"
+                f"{'Episode':>8}{'Step':>8}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
                 f"{'TimeDelta':>15}{'Time':>20}\n"
             )
@@ -23,6 +23,12 @@ class MetricLogger():
         self.ep_lengths = []
         self.ep_avg_losses = []
         self.ep_avg_qs = []
+
+        # Moving averages, added for every call to record()
+        self.moving_avg_ep_rewards = []
+        self.moving_avg_ep_lengths = []
+        self.moving_avg_ep_avg_losses = []
+        self.moving_avg_ep_avg_qs = []
 
         # Current episode metric
         self.init_episode()
@@ -66,6 +72,11 @@ class MetricLogger():
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
         mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
+        self.moving_avg_ep_rewards.append(mean_ep_reward)
+        self.moving_avg_ep_lengths.append(mean_ep_length)
+        self.moving_avg_ep_avg_losses.append(mean_ep_loss)
+        self.moving_avg_ep_avg_qs.append(mean_ep_q)
+
 
         last_record_time = self.record_time
         self.record_time = time.time()
@@ -73,8 +84,8 @@ class MetricLogger():
 
         print(
             f"Episode {episode} - "
-            f"Epsilon {epsilon} - "
             f"Step {step} - "
+            f"Epsilon {epsilon} - "
             f"Mean Reward {mean_ep_reward} - "
             f"Mean Length {mean_ep_length} - "
             f"Mean Loss {mean_ep_loss} - "
@@ -85,12 +96,13 @@ class MetricLogger():
 
         with open(self.save_log, "a") as f:
             f.write(
-                f"{episode:8d}{epsilon:10.3f}{step:8d}"
+                f"{episode:8d}{step:8d}{epsilon:10.3f}"
                 f"{mean_ep_reward:15.3f}{mean_ep_length:15.3f}{mean_ep_loss:15.3f}{mean_ep_q:15.3f}"
                 f"{time_since_last_record:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
             )
 
         for metric in ["ep_rewards", "ep_lengths", "ep_avg_losses", "ep_avg_qs"]:
-            plt.plot(getattr(self, metric))
+            plt.plot(getattr(self, f"moving_avg_{metric}"))
             plt.savefig(getattr(self, f"{metric}_plot"))
+            plt.clf()

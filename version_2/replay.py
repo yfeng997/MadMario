@@ -1,7 +1,7 @@
 import os
 import gym_super_mario_bros
 
-from gym.wrappers import FrameStack, GrayScaleObservation
+from gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
 
 from nes_py.wrappers import JoypadSpace
 from wrappers import ResizeObservation, SkipFrame
@@ -16,14 +16,15 @@ env = JoypadSpace(
     [['right'],
     ['right', 'A']]
 )
+env = SkipFrame(env, skip=4)
 env = GrayScaleObservation(env, keep_dim=False)
 env = ResizeObservation(env, shape=84)
+env = TransformObservation(env, f=lambda x: x / 255.)
 env = FrameStack(env, num_stack=4)
-env = SkipFrame(env, skip=4)
 
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=None)
 
-load_dir = "2020-10-08T11-00-32"
+load_dir = "2020-10-13T00-53-30"
 
 for mario_idx in range(mario.save_total):
     load_path = os.path.join(load_dir, f"mario_net_{mario_idx}.chkpt")
