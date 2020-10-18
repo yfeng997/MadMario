@@ -55,7 +55,7 @@ if True:
     # checkpoints/2020-10-13T00-53-30
     # checkpoints/2020-10-15T00-12-19
     # checkpoints/2020-10-17T01-44-25
-    load_path = "checkpoints/2020-10-15T00-12-19/mario_net_0.chkpt" # original from checkpoints/2020-10-13T00-53-30
+    load_path = "checkpoints/2020-10-17T01-44-25/mario_net_0.chkpt"
     mario.load(load_path)
     mario.exploration_rate = 0.138
 
@@ -72,7 +72,7 @@ for e in range(episodes):
     while True:
 
         # 3. Show environment (the visual) [WIP]
-        #env.render()
+        # env.render()
 
         # 4. Run agent on the state
         action = mario.act(state)
