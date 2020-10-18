@@ -48,6 +48,17 @@ if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
+
+"Load Pre-trained Mario Net"
+if True:
+    # possible loading path
+    # checkpoints/2020-10-13T00-53-30
+    # checkpoints/2020-10-15T00-12-19
+    # checkpoints/2020-10-17T01-44-25
+    load_path = "checkpoints/2020-10-15T00-12-19/mario_net_0.chkpt" # original from checkpoints/2020-10-13T00-53-30
+    mario.load(load_path)
+    mario.exploration_rate = 0.138
+
 logger = MetricLogger(save_dir)
 
 episodes = 15000

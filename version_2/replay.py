@@ -24,25 +24,32 @@ env = FrameStack(env, num_stack=4)
 
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=None)
 
-load_dir = "2020-10-13T00-53-30"
+load_dir = "2020-10-17T01-44-25"
 
-for mario_idx in range(mario.save_total):
-    load_path = os.path.join(load_dir, f"mario_net_{mario_idx}.chkpt")
+episodes = 100
+total_reward = 0.0
+total_length = 0.0
+for _ in range(episodes):
+    load_path = os.path.join(load_dir, f"mario_net_1.chkpt")
     mario.load(load_path)
-    mario.exploration_rate = mario.exploration_rate_min
+    mario.exploration_rate = 0.1
     mario.curr_step = 0
 
     state = env.reset()
-    total_reward = 0
+    ep_reward = 0.0
+    ep_length = 0.0
     while True:
-        env.render()
+        # env.render()
         action = mario.act(state=state)
         next_state, reward, done, info = env.step(action=action)
-        total_reward += reward
+        ep_reward += reward
+        ep_length += 1
         state = next_state
         if done or info['flag_get']:
             break
-    print(
-        f"#{mario_idx}. Mario finished after {mario.curr_step} steps "
-        f"with a total reward of {total_reward}"
-    )
+    total_reward += ep_reward
+    total_length += ep_length
+
+print(
+    f"Replay finished with avg. length {total_length/episodes}, avg. reward {total_reward/episodes}"
+)
