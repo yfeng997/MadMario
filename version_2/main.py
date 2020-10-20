@@ -55,9 +55,10 @@ if True:
     # checkpoints/2020-10-13T00-53-30
     # checkpoints/2020-10-15T00-12-19
     # checkpoints/2020-10-17T01-44-25
-    load_path = "checkpoints/2020-10-17T01-44-25/mario_net_0.chkpt"
+    # checkpoints/2020-10-19T16-32-36
+    load_path = "checkpoints/2020-10-19T16-32-36/mario_net_0.chkpt"
     mario.load(load_path)
-    mario.exploration_rate = 0.138
+    mario.exploration_rate = 0.1
 
 logger = MetricLogger(save_dir)
 
