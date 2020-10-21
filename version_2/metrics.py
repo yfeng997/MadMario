@@ -1,20 +1,22 @@
+import os
 import numpy as np
-import time, datetime
+import time
+import datetime
 import matplotlib.pyplot as plt
 
 class MetricLogger():
     def __init__(self, save_dir):
-        self.save_log = save_dir / "log"
+        self.save_log = os.path.join(save_dir, "log")
         with open(self.save_log, "w") as f:
             f.write(
                 f"{'Episode':>8}{'Step':>8}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
                 f"{'TimeDelta':>15}{'Time':>20}\n"
             )
-        self.ep_rewards_plot = save_dir / "reward_plot.jpg"
-        self.ep_lengths_plot = save_dir / "length_plot.jpg"
-        self.ep_avg_losses_plot = save_dir / "loss_plot.jpg"
-        self.ep_avg_qs_plot = save_dir / "q_plot.jpg"
+        self.ep_rewards_plot = os.path.join(save_dir, "reward_plot.jpg")
+        self.ep_lengths_plot = os.path.join(save_dir, "length_plot.jpg")
+        self.ep_avg_losses_plot = os.path.join(save_dir, "loss_plot.jpg")
+        self.ep_avg_qs_plot = os.path.join(save_dir, "q_plot.jpg")
 
         # History metrics
         self.ep_rewards = []

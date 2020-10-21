@@ -1,4 +1,10 @@
+# Gym is an OpenAI toolkit for RL
+import gym
+# Super Mario environment for OpenAI Gym
+import gym_super_mario_bros
+import torch
 from torch import nn
+import random, datetime, numpy as np, cv2
 import copy
 
 class MarioNet(nn.Module):
