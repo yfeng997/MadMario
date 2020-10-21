@@ -1,5 +1,6 @@
 import torch
 import random, numpy as np
+from pathlib import Path
 
 from neural import MarioNet
 from collections import deque
@@ -22,7 +23,7 @@ class Mario:
         self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
 
-        self.save_every = 1e5   # no. of experiences between saving Mario Net
+        self.save_every = 1e3   # no. of experiences between saving Mario Net
         self.save_total = 10    # total number of MarioNet to save
         self.save_dir = save_dir
 
@@ -151,18 +152,26 @@ class Mario:
 
     def save(self):
         save_path = self.save_dir / f"mario_net_{self.curr_step % self.save_total}.chkpt"
-        ckp = {'state_dict': self.net.state_dict(), 'exploration_rate' : self.exploration_rate}
-        torch.save(ckp, save_path)
+        torch.save(
+            dict(
+                model=self.net.state_dict(),
+                exploration_rate=self.exploration_rate
+            ),
+            save_path
+        )
         print(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
     def load(self, ckp_path=None):
-        load_path = ckp_path or sorted(list(self.save_dir.iterdir()))[-1] # Latest checkpoint
+        latest_model = sorted(Path("checkpoints").rglob("*.chkpt"))[-1]
+        load_path = ckp_path or latest_model
         if not load_path.exists():
             return
-        ckp = torch.load(load_path)
-        exploration_rate = ckp.get('exploration_rate')
-        state_dict = torch.load(ckp.get('state_dict'), map_location=('cuda' if self.use_cuda else 'cpu'))
 
+        ckp = torch.load(load_path, map_location=('cuda' if self.use_cuda else 'cpu'))
+        exploration_rate = ckp.get('exploration_rate')
+        state_dict = ckp.get('model')
+
+        print(f"Loading model at {load_path} with exploration rate {exploration_rate}")
         self.net.load_state_dict(state_dict)
         self.exploration_rate = exploration_rate
