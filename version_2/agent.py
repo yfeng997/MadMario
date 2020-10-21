@@ -24,7 +24,6 @@ class Mario:
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
 
         self.save_every = 1e3   # no. of experiences between saving Mario Net
-        self.save_total = 10    # total number of MarioNet to save
         self.save_dir = save_dir
 
         self.use_cuda = torch.cuda.is_available()
@@ -126,7 +125,7 @@ class Mario:
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
 
-        if self.curr_step % self.save_every < self.save_total:
+        if self.curr_step % self.save_every == 0:
             self.save()
 
         if self.curr_step < self.burnin:
@@ -151,7 +150,7 @@ class Mario:
 
 
     def save(self):
-        save_path = self.save_dir / f"mario_net_{self.curr_step % self.save_total}.chkpt"
+        save_path = self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         torch.save(
             dict(
                 model=self.net.state_dict(),
