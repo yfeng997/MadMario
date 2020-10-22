@@ -60,6 +60,10 @@ Interactive tutorial with extensive explanation and feedback. Run it on [Google 
 - MeanLoss: moving average of step loss in past 100 episodes
 - MeanQValue: moving average of step Q value (predicted) in past 100 episodes 
 
+## Pre-trained
+
+Checkpoint for a trained Mario: https://drive.google.com/file/d/1RRwhSMUrpBBRyAsfHLPGt1rlYFoiuus2/view?usp=sharing 
+
 ## Resources
 
 Deep Reinforcement Learning with Double Q-learning, Hado V. Hasselt et al, NIPS 2015: https://arxiv.org/abs/1509.06461
