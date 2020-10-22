@@ -20,23 +20,20 @@ To start the **learning** process for Mario,
 ```
 python main.py
 ```
-This will by default start the *double Q-learning* training. Logs are printed to the terminal and outputted to a `log.txt` under `checkpoints/curr_date_time/`. Every once in a while, a couple of trained Marios will be stored under the same folder named `online_q_idx.chkpt`. We save multiple Marios at once because RL is [known to be unstable](alexirpan.com/2018/02/14/rl-hard.html), and we need a couple examples to filter out the noise. 
+This starts the *double Q-learning* and logs key training metrics to `checkpoints`. In addition, a copy of `MarioNet` and current exploration rate will be saved. 
 
-Depending on if a CUDA device is available, training process will automatically happen on GPU/CPU. Estimated training time is 40 hours for CPU and 10 hours for GPU. 
+GPU will automatically be used if available. Training time is around 80 hours on CPU and 20 hours on GPU.  
 
-To **test** a trained Mario, 
+To **evaluate** a trained Mario, 
 ```
 python replay.py
 ```
-This will by default look at the most recent  folder under `checkpoints/`, e.g. `checkpoints/2020-06-06T22-00-00`, and sweep through all the saved Marios there. Change the `load_dir` parameter in `agent.replay()` if you wanna look at agents from a specific timestamp. 
+This visualizes Mario playing the game in a window. Performance metrics will be logged to a new folder under `checkpoints`. Change the `load_dir`, e.g. `checkpoints/2020-06-06T22-00-00`, in `Mario.load()` to check a specific timestamp.  
 
 
 ## Project Structure
 **main.py**
-Loop for action, memorizing and learning.
-
-**tutorial.ipynb**
-Interactive tutorial with extensive explanation and feedback. Run it on [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb#recent=true).  
+Main loop between Environment and Mario
 
 **agent.py**
 Define how the agent collects experiences, makes actions given observations and updates the action policy.
@@ -45,5 +42,33 @@ Define how the agent collects experiences, makes actions given observations and 
 Environment pre-processing logics, including observation resizing, rgb to grayscale, etc.
 
 **neural.py**
-Define a small convolution neural network as the Q value estimator.
+Define Q-value estimators backed by a convolution neural network. 
+
+**metrics.py**
+Define a `MetricLogger` that helps track training/evaluation performance. 
+
+**tutorial.ipynb**
+Interactive tutorial with extensive explanation and feedback. Run it on [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb#recent=true).  
+
+## Key Metrics
+
+- Episode: current episode
+- Step: total number of steps Mario played
+- Epsilon: current exploration rate
+- MeanReward: moving average of episode reward in past 100 episodes 
+- MeanLength: moving average of episode length in past 100 episodes
+- MeanLoss: moving average of step loss in past 100 episodes
+- MeanQValue: moving average of step Q value (predicted) in past 100 episodes 
+
+## Resources
+
+Deep Reinforcement Learning with Double Q-learning, Hado V. Hasselt et al, NIPS 2015: https://arxiv.org/abs/1509.06461
+
+OpenAI Spinning Up tutorial: https://spinningup.openai.com/en/latest/
+
+Reinforcement Learning: An Introduction, Richard S. Sutton et al. https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
+
+super-mario-reinforcement-learning, GitHub: https://github.com/sebastianheinz/super-mario-reinforcement-learning 
+
+Deep Reinforcement Learning Doesn't Work Yet: https://www.alexirpan.com/2018/02/14/rl-hard.html
 
