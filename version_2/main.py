@@ -1,15 +1,12 @@
 import os
-# Gym is an OpenAI toolkit for RL
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+import random, datetime
+from pathlib import Path
+
 import gym
-# Super Mario environment for OpenAI Gym
 import gym_super_mario_bros
-import torch
-from torch import nn
-import random, datetime, numpy as np, cv2
-
 from gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
-
-#NES Emulator for OpenAI Gym
 from nes_py.wrappers import JoypadSpace
 
 from metrics import MetricLogger
@@ -37,28 +34,11 @@ env = FrameStack(env, num_stack=4)
 
 env.reset()
 
-use_cuda = torch.cuda.is_available()
-print(f"Using CUDA: {use_cuda} \n")
+save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
+save_dir.mkdir(parents=True, exist_ok=True)
 
-save_dir = os.path.join(
-    "checkpoints",
-    f"{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}"
-)
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
-
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
-
-"Load Pre-trained Mario Net"
-if True:
-    # possible loading path
-    # checkpoints/2020-10-13T00-53-30
-    # checkpoints/2020-10-15T00-12-19
-    # checkpoints/2020-10-17T01-44-25
-    # checkpoints/2020-10-19T16-32-36
-    load_path = "checkpoints/2020-10-19T16-32-36/mario_net_0.chkpt"
-    mario.load(load_path)
-    mario.exploration_rate = 0.1
+checkpoint = None #'2020-10-21T15-18-15/mario_net_1.chkpt'
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint_path=checkpoint)
 
 logger = MetricLogger(save_dir)
 

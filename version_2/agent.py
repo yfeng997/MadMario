@@ -1,45 +1,42 @@
-import os
-# Gym is an OpenAI toolkit for RL
-import gym
-# Super Mario environment for OpenAI Gym
-import gym_super_mario_bros
 import torch
-from torch import nn
-import random, datetime, numpy as np, cv2
+import random, numpy as np
+from pathlib import Path
 
 from neural import MarioNet
 from collections import deque
-import pdb
 
 
 class Mario:
-    def __init__(self, state_dim, action_dim, save_dir):
+    def __init__(self, state_dim, action_dim, save_dir, checkpoint_path=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.memory = deque(maxlen=100000)
         self.batch_size = 32
+
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.gamma = 0.9
+
         self.curr_step = 0
         self.burnin = 1e5  # min. experiences before training
         self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
-        self.save_every = 1e5   # no. of experiences between saving Mario Net
-        self.save_total = 10    # total number of MarioNet to save
+
+        self.save_every = 1e3   # no. of experiences between saving Mario Net
         self.save_dir = save_dir
 
         self.use_cuda = torch.cuda.is_available()
 
         # Mario's DNN to predict the most optimal action - we implement this in the Learn section
-        self.net = MarioNet(self.state_dim, self.action_dim)
-        self.net = self.net.float()
+        self.net = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device='cuda')
+        if checkpoint_path is not None:
+            self.load(checkpoint_path)
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
-        self.loss_fn = nn.SmoothL1Loss()
+        self.loss_fn = torch.nn.SmoothL1Loss()
 
 
     def act(self, state):
@@ -87,14 +84,13 @@ class Mario:
         reward = torch.DoubleTensor([reward]).cuda() if self.use_cuda else torch.DoubleTensor([reward])
         done = torch.BoolTensor([done]).cuda() if self.use_cuda else torch.BoolTensor([done])
 
-        # conver everything to [GPU] tensors
-        # state, next_state, reward = map(FloatTensor, [state, next_state, reward]) # convert to float tensor
-        # action = IntTensor(action) # convert to tensor
-        # done = BoolTensor(done)
         self.memory.append( (state, next_state, action, reward, done,) )
 
 
     def recall(self):
+        """
+        Retrieve a batch of experiences from memory
+        """
         batch = random.sample(self.memory, self.batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
@@ -110,7 +106,6 @@ class Mario:
         next_state_Q = self.net(next_state, model='online')
         best_action = torch.argmax(next_state_Q, axis=1)
         next_Q = self.net(next_state, model='target')[np.arange(0, self.batch_size), best_action]
-        # When done == True, there is no next_Q
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
 
@@ -130,7 +125,7 @@ class Mario:
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
 
-        if self.curr_step % self.save_every < self.save_total:
+        if self.curr_step % self.save_every == 0:
             self.save()
 
         if self.curr_step < self.burnin:
@@ -138,7 +133,6 @@ class Mario:
 
         if self.curr_step % self.learn_every != 0:
             return None, None
-
 
         # Sample from memory
         state, next_state, action, reward, done = self.recall()
@@ -156,17 +150,24 @@ class Mario:
 
 
     def save(self):
-        """Periodically save MarioNet
-        """
-        save_path = os.path.join(self.save_dir, f"mario_net_{self.curr_step % self.save_total}.chkpt")
-        torch.save(self.net.state_dict(), save_path)
+        save_path = self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
+        torch.save(
+            dict(
+                model=self.net.state_dict(),
+                exploration_rate=self.exploration_rate
+            ),
+            save_path
+        )
         print(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
     def load(self, load_path):
-        """Load MarioNet for replay
-        """
-        if not os.path.exists(load_path):
-            return
-        state_dict = torch.load(load_path, map_location=torch.device("cpu"))
+        load_path = Path("checkpoints") / load_path
+
+        ckp = torch.load(load_path, map_location=('cuda' if self.use_cuda else 'cpu'))
+        exploration_rate = ckp.get('exploration_rate')
+        state_dict = ckp.get('model')
+
+        print(f"Loading model at {load_path} with exploration rate {exploration_rate}")
         self.net.load_state_dict(state_dict)
+        self.exploration_rate = exploration_rate
