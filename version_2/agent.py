@@ -7,7 +7,7 @@ from collections import deque
 
 
 class Mario:
-    def __init__(self, state_dim, action_dim, save_dir, load_existing):
+    def __init__(self, state_dim, action_dim, save_dir, checkpoint_path=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.memory = deque(maxlen=100000)
@@ -32,8 +32,8 @@ class Mario:
         self.net = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device='cuda')
-        if load_existing:
-            self.load()
+        if checkpoint_path is not None:
+            self.load(checkpoint_path)
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
@@ -161,11 +161,8 @@ class Mario:
         print(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
-    def load(self, ckp_path=None):
-        latest_model = sorted(Path("checkpoints").rglob("*.chkpt"))[-1]
-        load_path = ckp_path or latest_model
-        if not load_path.exists():
-            return
+    def load(self, load_path):
+        load_path = Path("checkpoints") / load_path
 
         ckp = torch.load(load_path, map_location=('cuda' if self.use_cuda else 'cpu'))
         exploration_rate = ckp.get('exploration_rate')

@@ -37,7 +37,8 @@ env.reset()
 save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
 save_dir.mkdir(parents=True, exist_ok=True)
 
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, load_existing=False)
+checkpoint = None #'2020-10-21T15-18-15/mario_net_1.chkpt'
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint_path=checkpoint)
 
 logger = MetricLogger(save_dir)
 
