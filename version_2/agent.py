@@ -7,7 +7,7 @@ from collections import deque
 
 
 class Mario:
-    def __init__(self, state_dim, action_dim, save_dir, checkpoint_path=None):
+    def __init__(self, state_dim, action_dim, save_dir, checkpoint=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.memory = deque(maxlen=100000)
@@ -23,7 +23,7 @@ class Mario:
         self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
 
-        self.save_every = 1e3   # no. of experiences between saving Mario Net
+        self.save_every = 1e5   # no. of experiences between saving Mario Net
         self.save_dir = save_dir
 
         self.use_cuda = torch.cuda.is_available()
@@ -32,8 +32,8 @@ class Mario:
         self.net = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device='cuda')
-        if checkpoint_path is not None:
-            self.load(checkpoint_path)
+        if checkpoint:
+            self.load(checkpoint)
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
@@ -162,7 +162,8 @@ class Mario:
 
 
     def load(self, load_path):
-        load_path = Path("checkpoints") / load_path
+        if not load_path.exists():
+            raise ValueError(f"{load_path} does not exist")
 
         ckp = torch.load(load_path, map_location=('cuda' if self.use_cuda else 'cpu'))
         exploration_rate = ckp.get('exploration_rate')
