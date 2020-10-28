@@ -1,6 +1,6 @@
 
 # MadMario
-Interactive tutorial to build a learning Mario, for first-time RL learners
+PyTorch official tutorial to build an AI-powered Mario.
 
 ## Set Up
 1. Install [conda](https://www.anaconda.com/products/individual)
@@ -16,19 +16,19 @@ Interactive tutorial to build a learning Mario, for first-time RL learners
     ```
 
 ## Running
-To start the **learning** process for Mario, 
+To start the **learning** process for Mario,
 ```
 python main.py
 ```
-This starts the *double Q-learning* and logs key training metrics to `checkpoints`. In addition, a copy of `MarioNet` and current exploration rate will be saved. 
+This starts the *double Q-learning* and logs key training metrics to `checkpoints`. In addition, a copy of `MarioNet` and current exploration rate will be saved.
 
-GPU will automatically be used if available. Training time is around 80 hours on CPU and 20 hours on GPU.  
+GPU will automatically be used if available. Training time is around 80 hours on CPU and 20 hours on GPU.
 
-To **evaluate** a trained Mario, 
+To **evaluate** a trained Mario,
 ```
 python replay.py
 ```
-This visualizes Mario playing the game in a window. Performance metrics will be logged to a new folder under `checkpoints`. Change the `load_dir`, e.g. `checkpoints/2020-06-06T22-00-00`, in `Mario.load()` to check a specific timestamp.  
+This visualizes Mario playing the game in a window. Performance metrics will be logged to a new folder under `checkpoints`. Change the `load_dir`, e.g. `checkpoints/2020-06-06T22-00-00`, in `Mario.load()` to check a specific timestamp.
 
 
 ## Project Structure
@@ -42,27 +42,27 @@ Define how the agent collects experiences, makes actions given observations and 
 Environment pre-processing logics, including observation resizing, rgb to grayscale, etc.
 
 **neural.py**
-Define Q-value estimators backed by a convolution neural network. 
+Define Q-value estimators backed by a convolution neural network.
 
 **metrics.py**
-Define a `MetricLogger` that helps track training/evaluation performance. 
+Define a `MetricLogger` that helps track training/evaluation performance.
 
 **tutorial.ipynb**
-Interactive tutorial with extensive explanation and feedback. Run it on [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb#recent=true).  
+Interactive tutorial with extensive explanation and feedback. Run it on [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb#recent=true).
 
 ## Key Metrics
 
 - Episode: current episode
 - Step: total number of steps Mario played
 - Epsilon: current exploration rate
-- MeanReward: moving average of episode reward in past 100 episodes 
+- MeanReward: moving average of episode reward in past 100 episodes
 - MeanLength: moving average of episode length in past 100 episodes
 - MeanLoss: moving average of step loss in past 100 episodes
-- MeanQValue: moving average of step Q value (predicted) in past 100 episodes 
+- MeanQValue: moving average of step Q value (predicted) in past 100 episodes
 
 ## Pre-trained
 
-Checkpoint for a trained Mario: https://drive.google.com/file/d/1RRwhSMUrpBBRyAsfHLPGt1rlYFoiuus2/view?usp=sharing 
+Checkpoint for a trained Mario: https://drive.google.com/file/d/1RRwhSMUrpBBRyAsfHLPGt1rlYFoiuus2/view?usp=sharing
 
 ## Resources
 
@@ -72,7 +72,6 @@ OpenAI Spinning Up tutorial: https://spinningup.openai.com/en/latest/
 
 Reinforcement Learning: An Introduction, Richard S. Sutton et al. https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
 
-super-mario-reinforcement-learning, GitHub: https://github.com/sebastianheinz/super-mario-reinforcement-learning 
+super-mario-reinforcement-learning, GitHub: https://github.com/sebastianheinz/super-mario-reinforcement-learning
 
 Deep Reinforcement Learning Doesn't Work Yet: https://www.alexirpan.com/2018/02/14/rl-hard.html
-
