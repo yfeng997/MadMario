@@ -29,7 +29,7 @@ as your companion. The full code is available
 ######################################################################
 # Setup
 # -----
-# 
+#
 
 # Mario game environment
 !pip install gym-super-mario-bros==7.3.0 opencv-python
@@ -40,7 +40,9 @@ import torch
 from torch import nn
 from pathlib import Path
 from collections import deque
-import random, datetime, numpy as np, cv2
+import random, datetime, numpy as np
+from skimage import transform
+
 
 # Gym is an OpenAI toolkit for RL
 import gym
@@ -57,45 +59,45 @@ import gym_super_mario_bros
 ######################################################################
 # RL Definitions
 # --------------
-# 
+#
 # **Environment** The world that an agent interacts with and learns from.
-# 
+#
 # **Action** :math:`a` : How the Agent responds to the Environment. The
 # set of all possible Actions is called *action-space*.
-# 
+#
 # **State** :math:`s` : The current characteristic of the Environment. The
 # set of all possible States the Environment can be in is called
 # *state-space*.
-# 
+#
 # **Reward** :math:`r` : Reward is the key feedback from Environment to
 # Agent. It is what drives the Agent to learn and to change its future
 # action. An aggregation of rewards over multiple time steps is called
 # **Return**.
-# 
+#
 # **Optimal Action-Value function** :math:`Q^*(s,a)` : Gives the expected
 # return if you start in state :math:`s`, take an arbitrary action
 # :math:`a`, and then for each future time step take the action that
 # maximizes returns. :math:`Q` can be said to stand for the “quality” of
 # the action in a state. We try to approximate this function.
-# 
+#
 
 
 ######################################################################
 # Initialize Environment
 # ======================
-# 
+#
 # In Mario, the environment consists of tubes, mushrooms and other
 # components.
-# 
+#
 # When Mario makes an action, the environment responds with the changed
 # (next) state, reward and other info.
-# 
+#
 
 # Initialize Super Mario environment
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 
 # Limit the action-space to
-#   0. walk right 
+#   0. walk right
 #   1. jump right
 env = JoypadSpace(
     env,
@@ -111,35 +113,35 @@ print(f'{next_state.shape},\n {reward},\n {done},\n {info}')
 ######################################################################
 # Preprocess Environment
 # ======================
-# 
+#
 # Environment data is returned to the agent in ``next_state``. As you saw
 # above, each state is represented by a ``[3, 240, 256]`` size array.
 # Often that is more information than our agent needs; for instance,
 # Mario’s actions do not depend on the color of the pipes or the sky!
-# 
+#
 # We use **Wrappers** to preprocess environment data before sending it to
 # the agent.
-# 
+#
 # ``GrayScaleObservation`` is a common wrapper to transform an RGB image
 # to grayscale; doing so reduces the size of the state representation
 # without losing useful information. Now the size of each state:
 # ``[1, 240, 256]``
-# 
+#
 # ``ResizeObservation`` downsamples each observation into a square image.
 # New size: ``[1, 84, 84]``
-# 
+#
 # ``SkipFrame`` is a custom wrapper that inherits from ``gym.Wrapper`` and
 # implements the ``step()`` function. Because consecutive frames don’t
 # vary much, we can skip n-intermediate frames without losing much
 # information. The n-th frame aggregates rewards accumulated over each
 # skipped frame.
-# 
+#
 # ``FrameStack`` is a wrapper that allows us to squash consecutive frames
 # of the environment into a single observation point to feed to our
 # learning model. This way, we can identify if Mario was landing or
 # jumping based on the direction of his movement in the previous several
 # frames.
-# 
+#
 
 class ResizeObservation(gym.ObservationWrapper):
     def __init__(self, env, shape):
@@ -153,8 +155,11 @@ class ResizeObservation(gym.ObservationWrapper):
         self.observation_space = Box(low=0, high=255, shape=obs_shape, dtype=np.uint8)
 
     def observation(self, observation):
-        observation = cv2.resize(observation, self.shape, interpolation=cv2.INTER_AREA)
-        return observation
+        resize_obs = transform.resize(observation, self.shape)
+        # cast float back to uint8
+        resize_obs *= 255
+        resize_obs = resize_obs.astype(np.uint8)
+        return resize_obs
 
 
 class SkipFrame(gym.Wrapper):
@@ -190,30 +195,30 @@ env = FrameStack(env, num_stack=4)
 # shown above in the image on the left. Each time Mario makes an action,
 # the environment responds with a state of this structure. The structure
 # is represented by a 3-D array of size ``[4, 84, 84]``.
-# 
+#
 # .. figure:: https://drive.google.com/uc?id=1zZU63qsuOKZIOwWt94z6cegOF2SMEmvD
 #    :alt: picture
-# 
+#
 #    picture
-# 
+#
 
 
 ######################################################################
 # Agent
 # =====
-# 
+#
 # We create a class ``Mario`` to represent our agent in the game. Mario
 # should be able to:
-# 
+#
 # -  **Act** according to the optimal action policy based on the current
 #    state (of the environment).
-# 
+#
 # -  **Remember** experiences. Experience = (current state, current
 #    action, reward, next state). Mario *caches* and later *recalls* his
 #    experiences to update his action policy.
-# 
+#
 # -  **Learn** a better action policy over time
-# 
+#
 
 class Mario:
     def __init__():
@@ -239,29 +244,29 @@ class Mario:
 ######################################################################
 # In the following sections, we will populate Mario’s parameters and
 # define his functions.
-# 
+#
 
 
 ######################################################################
 # Act
 # ===
-# 
+#
 # For any given state, an agent can choose to do the most optimal action
 # (**exploit**) or a random action (**explore**).
-# 
+#
 # Mario randomly explores with a chance of ``self.exploration_rate``; when
 # he chooses to exploit, he relies on ``MarioNet`` (implemented in
 # ``Learn`` section) to provide the most optimal action.
-# 
+#
 
-class Mario: 
+class Mario:
   def __init__(self, state_dim, action_dim, save_dir):
     self.state_dim = state_dim
     self.action_dim = action_dim
     self.save_dir = save_dir
 
     self.use_cuda = torch.cuda.is_available()
-    
+
     # Mario's DNN to predict the most optimal action - we implement this in the Learn section
     self.net = MarioNet(self.state_dim, self.action_dim).float()
     if self.use_cuda:
@@ -273,7 +278,7 @@ class Mario:
     self.curr_step = 0
 
     self.save_every = 5e5   # no. of experiences between saving Mario Net
-    
+
 
   def act(self, state):
     """
@@ -308,24 +313,24 @@ class Mario:
 ######################################################################
 # Cache and Recall
 # ================
-# 
+#
 # These two functions serve as Mario’s “memory” process.
-# 
+#
 # ``cache()``: Each time Mario performs an action, he stores the
 # ``experience`` to his memory. His experience includes the current
 # *state*, *action* performed, *reward* from the action, the *next state*,
 # and whether the game is *done*.
-# 
+#
 # ``recall()``: Mario randomly samples a batch of experiences from his
 # memory, and uses that to learn the game.
-# 
+#
 
 class Mario(Mario): # subclassing for continuity
   def __init__(self, state_dim, action_dim, save_dir):
     super().__init__(state_dim, action_dim, save_dir)
     self.memory = deque(maxlen=100000)
     self.batch_size = 32
-    
+
 
   def cache(self, state, next_state, action, reward, done):
     """
@@ -346,7 +351,7 @@ class Mario(Mario): # subclassing for continuity
 
     self.memory.append( (state, next_state, action, reward, done,) )
 
-  
+
   def recall(self):
     """
     Retrieve a batch of experiences from memory
@@ -359,25 +364,25 @@ class Mario(Mario): # subclassing for continuity
 ######################################################################
 # Learn
 # =====
-# 
+#
 # Mario uses the `DDQN algorithm <https://arxiv.org/pdf/1509.06461>`__
 # under the hood. DDQN uses two ConvNets - :math:`Q_{online}` and
 # :math:`Q_{target}` - that independently approximate the optimal
 # action-value function.
-# 
+#
 # In our implementation, we share feature generator ``features`` across
 # :math:`Q_{online}` and :math:`Q_{target}`, but maintain separate FC
 # classifiers for each. :math:`\theta_{target}` (the parameters of
 # :math:`Q_{target}`) is frozen to prevent updation by backprop. Instead,
 # it is periodically synced with :math:`\theta_{online}` (more on this
 # later).
-# 
+#
 
 
 ######################################################################
 # Neural Network
 # ~~~~~~~~~~~~~~
-# 
+#
 
 class MarioNet(nn.Module):
   '''mini cnn structure
@@ -421,45 +426,45 @@ class MarioNet(nn.Module):
 ######################################################################
 # TD Estimate & TD Target
 # -----------------------
-# 
+#
 # Two values are involved in learning:
-# 
+#
 # **TD Estimate** - the predicted optimal :math:`Q^*` for a given state
 # :math:`s`
-# 
+#
 # .. math::
-# 
-# 
+#
+#
 #    {TD}_e = Q_{online}^*(s,a)
-# 
+#
 # **TD Target** - aggregation of current reward and the estimated
 # :math:`Q^*` in the next state :math:`s'`
-# 
+#
 # .. math::
-# 
-# 
+#
+#
 #    a' = argmax_{a} Q_{online}(s', a)
-# 
+#
 # .. math::
-# 
-# 
+#
+#
 #    {TD}_t = r + \gamma Q_{target}^*(s',a')
-# 
+#
 # Because we don’t know what next action :math:`a'` will be, we use the
 # action :math:`a'` maximizes :math:`Q_{online}` in the next state
 # :math:`s'`.
-# 
+#
 # Notice we use the
 # [@torch.no_grad()](https://pytorch.org/docs/stable/generated/torch.no_grad.html#no-grad)
 # decorator on ``td_target()`` to disable gradient calculations here
 # (because we don’t need to backpropagate on :math:`\theta_{target}`).
-# 
+#
 
 class Mario(Mario):
   def __init__(self, state_dim, action_dim, save_dir):
     super().__init__(state_dim, action_dim, save_dir)
     self.gamma = 0.9
-    
+
   def td_estimate(self, state, action):
     current_Q = self.net(state, model='online')[np.arange(0, self.batch_size), action] # Q_online(s,a)
     return current_Q
@@ -475,27 +480,27 @@ class Mario(Mario):
 ######################################################################
 # Updating the model
 # ------------------
-# 
+#
 # As Mario samples inputs from his replay buffer, we compute :math:`TD_t`
 # and :math:`TD_e` and backpropagate this loss down :math:`Q_{online}` to
 # update its parameters :math:`\theta_{online}` (:math:`\alpha` is the
 # learning rate ``lr`` passed to the ``Adam optimizer``)
-# 
+#
 # .. math::
-# 
-# 
+#
+#
 #    \theta_{online} \leftarrow \theta_{online} + \alpha \nabla(TD_e - TD_t)
-# 
+#
 #  :math:`\theta_{target}` does not update through backpropagation.
 # Instead, we periodically copy :math:`\theta_{online}` to
 # :math:`\theta_{target}`
-# 
+#
 # .. math::
-# 
-# 
+#
+#
 #    \theta_{target} \leftarrow \theta_{online}
-# 
-# 
+#
+#
 
 class Mario(Mario):
     def __init__(self, state_dim, action_dim, save_dir):
@@ -509,7 +514,7 @@ class Mario(Mario):
       loss.backward()
       self.optimizer.step()
       return loss.item()
-      
+
     def sync_Q_target(self):
       self.net.target.load_state_dict(self.net.online.state_dict())
 
@@ -517,7 +522,7 @@ class Mario(Mario):
 ######################################################################
 # Save checkpoint
 # ---------------
-# 
+#
 
 class Mario(Mario):
     def save(self):
@@ -535,7 +540,7 @@ class Mario(Mario):
 ######################################################################
 # Putting it all together
 # -----------------------
-# 
+#
 
 class Mario(Mario):
     def __init__(self, state_dim, action_dim, save_dir):
@@ -543,7 +548,7 @@ class Mario(Mario):
         self.burnin = 1e5  # min. experiences before training
         self.learn_every = 3   # no. of experiences between updates to Q_online
         self.sync_every = 1e4   # no. of experiences between Q_target & Q_online sync
-        
+
 
     def learn(self):
       if self.curr_step % self.sync_every == 0:
@@ -577,7 +582,7 @@ class Mario(Mario):
 ######################################################################
 # Logging
 # =======
-# 
+#
 
 import numpy as np
 import time, datetime
@@ -691,7 +696,7 @@ class MetricLogger():
 ######################################################################
 # Let’s play!
 # ===========
-# 
+#
 
 use_cuda = torch.cuda.is_available()
 print(f"Using CUDA: {use_cuda}")
@@ -701,7 +706,7 @@ save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%
 save_dir.mkdir(parents=True)
 
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
- 
+
 logger = MetricLogger(save_dir)
 
 episodes = 40000
