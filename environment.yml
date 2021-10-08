@@ -19,17 +19,19 @@ dependencies:
   - xz=5.2.5=h1de35cc_0
   - zlib=1.2.11=h1de35cc_3
   - pip:
-    - cloudpickle==1.3.0
+    - cloudpickle==2.0.0
     - future==0.18.2
-    - gym==0.17.2
-    - gym-super-mario-bros==7.3.0
-    - nes-py==8.1.1
-    - numpy==1.18.4
-    - opencv-python==4.2.0.34
-    - pillow==7.1.2
-    - pyglet==1.5.5
-    - scipy==1.4.1
-    - torch==1.5.0
-    - torchvision==0.6.0
-    - tqdm==4.46.0
+    - gym==0.21.0
+    - gym-super-mario-bros==7.3.2
+    - nes-py==8.1.8
+    - numpy==1.21.2
+    - matplotlib==3.4.3
+    - opencv-python==4.5.3.56
+    - pillow==8.3.2
+    - pyglet==1.5.21
+    - scikit-image==0.18.3
+    - scipy==1.7.1
+    - torch==1.9.1
+    - torchvision==0.10.1
+    - tqdm==4.62.3
 prefix: /opt/anaconda3/envs/mario
