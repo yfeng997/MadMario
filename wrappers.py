@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import torch
 import random, datetime, numpy as np
 from skimage import transform

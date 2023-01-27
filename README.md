@@ -9,6 +9,8 @@ PyTorch [official tutorial](https://pytorch.org/tutorials/intermediate/mario_rl_
 1. Install [poetry](https://python-poetry.org/docs/)
 2. Run the following in a terminal
     ```
+    poetry config virtualenvs.in-project true
+    poetry env use python3.10
     poetry install
     ```
 3. Run mario
