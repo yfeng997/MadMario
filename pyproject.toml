@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "mad-mario"
+version = "0.1.0"
+description = ""
+authors = ["Rohit <rohit@gmail.com>"]
+readme = "README.md"
+packages = [{include = "mario_rl"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+nes-py = "^8.2.1"
+torch = "^1.13.1"
+gym-super-mario-bros = "^7.4.0"
+matplotlib = "^3.6.3"
+scikit-image = "^0.19.3"
+opencv-python = "^4.7.0.68"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
