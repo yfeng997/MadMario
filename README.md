@@ -3,6 +3,21 @@
 PyTorch [official tutorial](https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html) to build an AI-powered Mario.
 
 ## Set Up
+
+### Poetry (Working as of Jan 2023)
+
+1. Install [poetry](https://python-poetry.org/docs/)
+2. Run the following in a terminal
+    ```
+    poetry install
+    ```
+3. Run mario
+    ```
+    poetry run python3 main.py
+    ```
+**NOTE** In the instructions below on running commands, prepend `poetry run python3` if using poetry.
+
+### Conda (Out of date dependencies)
 1. Install [conda](https://www.anaconda.com/products/individual)
 2. Install dependencies with `environment.yml`
     ```
